@@ -8,12 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
 import java.util.Optional;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@TestPropertySource(locations = "classpath:/application-test.properties")
 public class PokemonRepositoryTests {
 
     @Autowired
@@ -22,7 +24,7 @@ public class PokemonRepositoryTests {
     @Test
     public void PokemonRepository_SaveAll_ReturnSavedPokemon() {
         //Arrange
-        Pokemon pokemon = Pokemon.builder()
+        Pokemon pokemon = Pokemon.builder() //pokemonBuilder
                 .name("Pikachu")
                 .type(PokemonType.ELECTRIC)
                 .build();
