@@ -7,6 +7,7 @@ import com.pokemonreview.api.models.Review;
 import com.pokemonreview.api.repository.PokemonRepository;
 import com.pokemonreview.api.repository.ReviewRepository;
 import com.pokemonreview.api.service.ReviewService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,16 +17,17 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
     private ReviewRepository reviewRepository;
     private PokemonRepository pokemonRepository;
 
-    @Autowired
-    public ReviewServiceImpl(ReviewRepository reviewRepository, 
-                             PokemonRepository pokemonRepository) {
-        this.reviewRepository = reviewRepository;
-        this.pokemonRepository = pokemonRepository;
-    }
+//    @Autowired
+//    public ReviewServiceImpl(ReviewRepository reviewRepository,
+//                             PokemonRepository pokemonRepository) {
+//        this.reviewRepository = reviewRepository;
+//        this.pokemonRepository = pokemonRepository;
+//    }
 
     private Pokemon getExistPokemon(int pokemonId) {
         Pokemon pokemon = pokemonRepository
@@ -62,7 +64,8 @@ public class ReviewServiceImpl implements ReviewService {
         List<Review> reviews = reviewRepository.findByPokemonId(id);
 
         return reviews.stream()
-                .map(review -> mapToDto(review))
+                //.map(review -> mapToDto(review))
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
@@ -97,9 +100,9 @@ public class ReviewServiceImpl implements ReviewService {
         review.setContent(reviewDto.getContent());
         review.setStars(reviewDto.getStars());
 
-        Review updateReview = reviewRepository.save(review);
-
-        return mapToDto(updateReview);
+//        Review updateReview = reviewRepository.save(review);
+//        return mapToDto(updateReview);
+        return mapToDto(review);
     }
 
     @Override

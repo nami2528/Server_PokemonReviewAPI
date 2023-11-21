@@ -6,6 +6,8 @@ import com.pokemonreview.api.exceptions.ResourceNotFoundException;
 import com.pokemonreview.api.models.Pokemon;
 import com.pokemonreview.api.repository.PokemonRepository;
 import com.pokemonreview.api.service.PokemonService;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,24 +20,28 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PokemonServiceImpl implements PokemonService {
-    private PokemonRepository pokemonRepository;
+    private final PokemonRepository pokemonRepository;
+    private final ModelMapper modelMapper;
 
-    public PokemonServiceImpl(PokemonRepository pokemonRepository) {
-        this.pokemonRepository = pokemonRepository;
-    }
+    //Constructor Injection (생성자 주입)
+//    public PokemonServiceImpl(PokemonRepository pokemonRepository) {
+//        this.pokemonRepository = pokemonRepository;
+//    }
 
     @Override
     public PokemonDto createPokemon(PokemonDto pokemonDto) {
-        Pokemon pokemon = mapToEntity(pokemonDto);
+        //Pokemon pokemon = mapToEntity(pokemonDto);
+        Pokemon pokemon = modelMapper.map(pokemonDto, Pokemon.class);
 
         Pokemon newPokemon = pokemonRepository.save(pokemon);
 
-        PokemonDto pokemonResponse = new PokemonDto();
-        pokemonResponse.setId(newPokemon.getId());
-        pokemonResponse.setName(newPokemon.getName());
-        pokemonResponse.setType(newPokemon.getType());
-        return pokemonResponse;
+//        PokemonDto pokemonResponse = new PokemonDto();
+//        pokemonResponse.setId(newPokemon.getId());
+//        pokemonResponse.setName(newPokemon.getName());
+//        pokemonResponse.setType(newPokemon.getType());
+        return modelMapper.map(newPokemon, PokemonDto.class);
     }
 
     @Override
@@ -47,8 +53,9 @@ public class PokemonServiceImpl implements PokemonService {
         List<Pokemon> listOfPokemon = pokemonPage.getContent();
         List<PokemonDto> content = listOfPokemon
                 .stream() //Stream<Pokemon>
-                .map(p -> mapToDto(p)) //Stream<PokemonDto>
-                //.map(this::mapToDto)
+                //entity -> dto
+                //.map(entity -> mapToDto(entity)) //Stream<PokemonDto>
+                .map(this::mapToDto)
                 .collect(Collectors.toList()); //List<PokemonDto>
 
         PageResponse<PokemonDto> pokemonResponse = new PageResponse<>();
@@ -70,7 +77,7 @@ public class PokemonServiceImpl implements PokemonService {
 
     private Pokemon getExistPokemon(int id) {
         Pokemon pokemon = pokemonRepository
-                .findById(id)
+                .findById(id) //Option<Pokemon>
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Pokemon could not be found"));
         return pokemon;
@@ -80,8 +87,9 @@ public class PokemonServiceImpl implements PokemonService {
     public PokemonDto updatePokemon(PokemonDto pokemonDto, int id) {
         Pokemon pokemon = getExistPokemon(id);
 
-        pokemon.setName(pokemonDto.getName());
-        pokemon.setType(pokemonDto.getType());
+        //Entity의 setter methond 호출을 해도 update query가 실행됨(Dirty Checking)
+        if(pokemonDto.getName() != null) pokemon.setName(pokemonDto.getName());
+        if(pokemonDto.getType() != null) pokemon.setType(pokemonDto.getType());
 
         //Pokemon updatedPokemon = pokemonRepository.save(pokemon);
         return mapToDto(pokemon);
@@ -93,6 +101,7 @@ public class PokemonServiceImpl implements PokemonService {
         pokemonRepository.delete(pokemon);
     }
 
+    //Entity -> Dto
     private PokemonDto mapToDto(Pokemon pokemon) {
         PokemonDto pokemonDto = new PokemonDto();
         pokemonDto.setId(pokemon.getId());
@@ -101,6 +110,7 @@ public class PokemonServiceImpl implements PokemonService {
         return pokemonDto;
     }
 
+    //Dto -> Entity
     private Pokemon mapToEntity(PokemonDto pokemonDto) {
         Pokemon pokemon = new Pokemon();
         pokemon.setName(pokemonDto.getName());
