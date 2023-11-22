@@ -8,6 +8,7 @@ import com.pokemonreview.api.models.security.RoleEntity;
 import com.pokemonreview.api.models.security.UserEntity;
 import com.pokemonreview.api.repository.security.RoleRepository;
 import com.pokemonreview.api.repository.security.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,9 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -31,11 +30,13 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+
     private final AuthenticationManager authenticationManager;
     private final JWTGenerator jwtGenerator;
 
-//    public AuthController(UserRepository userRepository, RoleRepository roleRepository,
-//                                                            PasswordEncoder passwordEncoder) {
+//    public AuthController(UserRepository userRepository,
+//                          RoleRepository roleRepository,
+//                          PasswordEncoder passwordEncoder) {
 //        this.userRepository = userRepository;
 //        this.roleRepository = roleRepository;
 //        this.passwordEncoder = passwordEncoder;
@@ -44,29 +45,6 @@ public class AuthController {
     @GetMapping("/welcome")
     public String welcome() {
         return "Welcome this endpoint is not secure";
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginDto loginDto){
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDto.getUsername(),
-                        loginDto.getPassword())
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        //token 생성
-        String token = jwtGenerator.generateToken(authentication);
-
-        AuthResponseDto authResponseDTO = new AuthResponseDto(token);
-        authResponseDTO.setUsername(loginDto.getUsername());
-
-        Optional<UserEntity> optionalUser =
-                userRepository.findByUsername(loginDto.getUsername());
-        if(optionalUser.isPresent()){
-            UserEntity userEntity = optionalUser.get();
-            authResponseDTO.setRole(userEntity.getRoles().get(0).getName());
-        }
-        return new ResponseEntity<>(authResponseDTO, HttpStatus.OK);
     }
 
     @PostMapping("/register")
@@ -92,6 +70,29 @@ public class AuthController {
         userRepository.save(user);
 
         return new ResponseEntity<>("User registered success!", HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDto> login(@RequestBody LoginDto loginDto){
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginDto.getUsername(),
+                        loginDto.getPassword())
+        );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        //token 생성
+        String token = jwtGenerator.generateToken(authentication);
+
+        AuthResponseDto authResponseDTO = new AuthResponseDto(token);
+        authResponseDTO.setUsername(loginDto.getUsername());
+
+        Optional<UserEntity> optionalUser =
+                userRepository.findByUsername(loginDto.getUsername());
+        if(optionalUser.isPresent()){
+            UserEntity userEntity = optionalUser.get();
+            authResponseDTO.setRole(userEntity.getRoles().get(0).getName());
+        }
+        return new ResponseEntity<>(authResponseDTO, HttpStatus.OK);
     }
 
 }

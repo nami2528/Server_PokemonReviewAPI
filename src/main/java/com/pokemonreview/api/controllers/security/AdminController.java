@@ -29,7 +29,7 @@ public class AdminController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public PageResponse getAllUsers(
+    public PageResponse<?> getAllUsers(
             @RequestParam(value = "pageNo", defaultValue = "0", required = false) int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "2", required = false) int pageSize) {
 
@@ -38,14 +38,14 @@ public class AdminController {
         List<UserEntity> listOfUser = userEntityPage.getContent();
         List<UserDto> userDtoList =
                 listOfUser.stream()
-                    .map(entity -> UserDto.builder()
-                    .id(entity.getId())
-                    .username(entity.getUsername())
-                    .firstName(entity.getFirstName())
-                    .lastName(entity.getLastName())
-                    .role(entity.getRoles().get(0).getName())
-                    .build())
-                    .collect(Collectors.toList());
+                        .map(entity -> UserDto.builder()
+                                .id(entity.getId())
+                                .username(entity.getUsername())
+                                .firstName(entity.getFirstName())
+                                .lastName(entity.getLastName())
+                                .role(entity.getRoles().get(0).getName())
+                                .build())
+                        .collect(Collectors.toList());
 
         PageResponse<UserDto> userResponse = new PageResponse<>();
         userResponse.setContent(userDtoList);
@@ -66,15 +66,14 @@ public class AdminController {
                 .findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        UserDto existUserDto = mapToDto(existUser);
-        return existUserDto;
+        return mapToDto(existUser);
     }
 
     private UserDto mapToDto(UserEntity userEntity) {
         UserDto userDto = new UserDto();
         userDto.setId(userEntity.getId());
         userDto.setUsername(userEntity.getUsername());
-				userDto.setFirstName(userEntity.getFirstName());
+        userDto.setFirstName(userEntity.getFirstName());
         userDto.setLastName(userEntity.getLastName());
         userDto.setPassword(userEntity.getPassword());
         userDto.setRole(userEntity.getRoles().get(0).getName());
@@ -82,8 +81,12 @@ public class AdminController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable("id") int userId, @RequestBody UserDto userDto) {
-        UserEntity existUser = userRepository.findById(userId)
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<UserDto> updateUser(
+            @PathVariable("id") int userId,
+            @RequestBody UserDto userDto) {
+        UserEntity existUser = userRepository
+                .findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         existUser.setFirstName(userDto.getFirstName());
@@ -96,8 +99,10 @@ public class AdminController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> deleteUser(@PathVariable("id") int userId) {
-        UserEntity userEntity = userRepository.findById(userId)
+        UserEntity userEntity = userRepository
+                .findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         userRepository.delete(userEntity);
