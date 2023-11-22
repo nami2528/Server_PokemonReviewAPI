@@ -41,7 +41,7 @@ jobs:
           registry: docker.io
           dockerfile: Dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          password: ${{ secrets.DOCKER_PASSWORD }}gitg
 
       - name: EC2 Docker Run
         uses: appleboy/ssh-action@master
